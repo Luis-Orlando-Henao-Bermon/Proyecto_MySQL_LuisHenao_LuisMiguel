@@ -78,7 +78,7 @@ begin
     if tipo = 'empleado' then
 		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from empleado where id = id_persona);
 	elseif tipo = 'proveedor' then
-		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from preveedor where id = id_persona);
+		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from proveedor where id = id_persona);
 	elseif tipo = 'cliente' then
 		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from cliente where id = id_persona);
 	else set nombre = 'la tabla que ingresaste no existe';
