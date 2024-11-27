@@ -71,4 +71,42 @@ select c.* , nombre_completo(p.id,'proveedor') as nombre_completo from compra c 
 
 -- 23 cantidad de empleados por cosecha
 select c.* , count(*) from cosecha c inner join cosecha_empleado ce on c.id = ce.id_cosecha group by 1; 
-select * from cultivo_empleado;
+
+-- 24 compra mas costosa
+select * from compra order by precio_total desc limit 1;
+
+-- 25 compra menos costosa 
+select * from compra order by precio_total asc limit 1;
+
+-- 26 total de dinero gastado por cliente 
+select c.* , sum(v.precio_total) from venta v inner join cliente c on v.id_cliente = c.id group by 1;
+
+-- 27 empleado que mas salarios ha recibido
+select nombre_completo(e.id,'empleado') , count(*) as cantidad_pagos_recibidos from salarios s inner join empleado e on s.id_empleado = e.id group by e.id;
+
+-- 28 cantidad compras por proveedor
+select nombre_completo(p.id,'proveedor') , count(*) as cantidad_compras from compra c inner join proveedor p on c.id_proveedor = p.id group by p.id;
+
+-- 29 producto mas cosechado
+select p.nombre , sum(c.cantidad_cosechada_kg) cantidad_total_cosechada_kg from cosecha c 
+inner join cultivo cul on c.id_cultivo = cul.id 
+inner join producto p on cul.id_producto = p.id 
+group by p.id order by 2 desc limit 1;
+
+-- 30 dias que faltó un empleado 
+select s.inicio_mes_pagado , s.fin_mes_pagado , nombre_completo(e.id,'empleado') as nombre_completo , (c.dias_trabajo - s.dias_trabajados) as dis_que_faltó from empleado e inner join salarios s on e.id = s.id_empleado inner join cargo c on e.id_cargo = c.id;
+
+-- 31 buscar cliente por cedula
+select * from cliente where cedula = 1012012012;
+
+-- 32 cargo con mayor numero de empleado
+select c.nombre , count(*) as numero_empleados from cargo c inner join empleado e on c.id = e.id_cargo group by 1 order by 2 desc limit 1;
+
+-- 33 mostrar cultivos
+select * from cultivo;
+
+-- 34 ver ingresos y gastos mensuales
+select * from ingresos_gastos_mensuales;
+
+-- 35 listar insumos en la bodega con el id 1
+select b.nombre as bodega , i.* from bodega b inner join insumos i on b.id = i.id_bodega where b.id = 1;
