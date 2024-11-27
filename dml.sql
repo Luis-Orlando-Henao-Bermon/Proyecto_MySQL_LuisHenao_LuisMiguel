@@ -984,3 +984,6 @@ INSERT INTO cultivo_empleado (id_cosecha, id_empleado) VALUES
 (20, 39),
 (20, 43),
 (20, 48);
+
+INSERT INTO ingresos_gastos_mensuales (id, inicio_mes, fin_mes, ingresos, gastos, ganancia_final)
+VALUES (1, '2024-10-01', '2024-10-31', 0, 69474293, -69474293);

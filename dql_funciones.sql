@@ -114,120 +114,120 @@ end
 select promedio_presentacion(2);
 
 -- 8 total de ingresos por ventas en un rango de fechas.
+-- si esta funcion arroja como resultado 'NULL' se debe a que algunas ventas
+-- no tienen precio total  por lo tanto tienes que ejecutar los procedimientos #1 asignar_precio_total() y #2 bucle_precio_total_venta()
+-- otra razon puede ser que no hay ventas en ese rango de fecha
 drop function if exists ventas_fechas;
 delimiter //
 create function ventas_fechas (fecha1 date , fecha2 date)
 returns decimal(12,2) deterministic
 begin
-	return (select sum(precio_total) from venta where fecha_venta between fecha1 and fecha2);
+	declare ventas int;
+    set ventas=(select sum(precio_total) from venta where fecha_venta between fecha1 and fecha2);
+    
+    if (ventas is null) then 
+		set ventas=0;
+	end if;
+
+	return ventas;
 end
 // delimiter ;
 
 select ventas_fechas('2024-11-11','2024-11-23');
 
-
-
-
-
-
-
-
-select * from empleado;
-select * from cargo;
-select * from venta_producto;
-select * from venta;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- 9 porcentaje de hectáreas usadas en un terreno.
+drop function if exists terreno_usado_porcentaje;
+delimiter //
+create function terreno_usado_porcentaje (id_terreno int)
+returns decimal(12,2) deterministic
+begin
+	declare terreno_usado int;
+    set terreno_usado = (select (tamaño - hectareas_libres) from terreno where id = id_terreno);
+    return (terreno_usado/(select tamaño from terreno where id = id_terreno))*100;
+end
+// delimiter ;
+
+select terreno_usado_porcentaje (2);
+
+-- 10 total de hectareas usadas
+drop function if exists terreno_usado;
+delimiter //
+create function terreno_usado (id_terreno int)
+returns decimal(12,2) deterministic
+begin
+    return (select (tamaño - hectareas_libres) from terreno where id = id_terreno);
+end
+// delimiter ;
+
+select terreno_usado (1);
+
+-- 11 cantidad total producida en una cosecha
+drop function if exists cantidad_producida;
+delimiter //
+create function cantidad_producida (id_cosecha int)
+returns decimal(12,2) deterministic
+begin
+    return (select cantidad_total_kg from cosecha where id = id_cosecha);
+end
+// delimiter ;
+
+select cantidad_producida (3);
+
+-- 12 total de ingresos por un cliente especifico
+-- si esta funcion arroja como resultado 'NULL' se debe a que algunas ventas
+-- no tienen precio total  por lo tanto tienes que ejecutar los procedimientos #1 asignar_precio_total() y #2 bucle_precio_total_venta()
+drop function if exists cantidad_ingreso_cliente;
+delimiter //
+create function cantidad_ingreso_cliente (id_cliente_i int)
+returns decimal(12,2) deterministic
+begin
+    return (select sum(precio_total) from venta where id_cliente = id_cliente_i group by id_cliente);
+end
+// delimiter ;
+
+select cantidad_ingreso_cliente (3);
+
+-- 13 Determinar el estado de una maquinaria o herramienta según su ID.
+drop function if exists determinar_estado;
+delimiter //
+create function determinar_estado (id_maquinaria_herramienta int)
+returns varchar(20) deterministic
+begin
+    return (select e.nombre from maquinaria_herramienta mh inner join estados_mh e on mh.id_tipo = e.id where mh.id = id_maquinaria_herramienta);
+end
+// delimiter ;
+
+select determinar_estado (3);
+
+
+-- 14 ver cantidad de dias que tardó una cosecha
+drop function if exists dias_cosecha;
+delimiter //
+create function dias_cosecha (id_cosecha int)
+returns varchar(20) deterministic
+begin
+    return (select timestampdiff(day,fecha_inicio,fecha_fin) from cosecha where id = id_cosecha);
+end
+// delimiter ;
+
+select dias_cosecha (3);
+
+
+-- 15 Determinar el porcentaje de herramientas en cada estado (activo, inactivo, en mantenimiento).
+drop function if exists porcentaje_heramientas_por_estado;
+delimiter //
+create function porcentaje_heramientas_por_estado (estado varchar(20))
+returns decimal(10,2) deterministic
+begin
+    declare cantidad_herramientas int;
+    declare cantidad_herramientas_por_estado int;
+    set cantidad_herramientas = (select count(*) from maquinaria_herramienta);
+    set cantidad_herramientas_por_estado = (select count(*) from maquinaria_herramienta mh inner join estados_mh e on mh.id_estado = e.id where e.nombre = estado group by e.id);
+    return (cantidad_herramientas_por_estado/cantidad_herramientas)*100;
+end
+// delimiter ;
+
+select porcentaje_heramientas_por_estado ('dañado');
 
 
 -- 16. calcular el porcentaje de ganancia de un mes. la ganacia se calcula restandole los gastos a los ingresos 
@@ -264,9 +264,6 @@ end
 // delimiter ;
 
 select total_cosecha_producto(3) as total_cosecha;
-
-insert into ingresos_gastos_mensuales(inicio_mes,fin_mes,ingresos,gastos,ganancia_final) 
-values ('2024-10-01','2024-10-31',ventas_fechas('2024-10-01','2024-10-31'),gastos_mensuales('2024-10-01','2024-10-31'),0);
 
 -- 18. Calcular los gastos mensuales
 -- previamente debes ejecutar los procedimientos #3 y #4 asignar_pago_final() y asignar_salarios()
