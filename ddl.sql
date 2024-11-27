@@ -147,11 +147,11 @@ create table cultivo (
 create table cosecha (
 	id int primary key auto_increment,
 	fecha_inicio date not null,
-    fecha_fin date not null,
+    fecha_fin date,
     id_cultivo int not null,
-    cantidad_total_kg int not null,
-    cantidad_cosechada_kg int not null,
-    cantidad_perdida int not null,
+    cantidad_total_kg int,
+    cantidad_cosechada_kg int,
+    cantidad_perdida int,
     foreign key (id_cultivo) references cultivo(id)
 );
 
