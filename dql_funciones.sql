@@ -66,6 +66,76 @@ end
 
 select ver_producto_caro (6);
 
+
+	
+-- 5 nombres completos
+drop function if exists nombre_completo;
+delimiter //
+create function nombre_completo (id_persona int, tipo varchar(20))
+returns varchar(50) deterministic
+begin
+	declare nombre varchar(50);
+    if tipo = 'empleado' then
+		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from empleado where id = id_persona);
+	elseif tipo = 'proveedor' then
+		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from preveedor where id = id_persona);
+	elseif tipo = 'cliente' then
+		set nombre = (select concat_ws('',nombre1,' ',nombre2,' ',apellido1,' ',apellido2) from cliente where id = id_persona);
+	else set nombre = 'la tabla que ingresaste no existe';
+    end if;
+	return nombre;
+end
+// delimiter ;
+
+select nombre_completo(10,'proveedor');
+
+-- 6 salario diario de un empleado
+drop function if exists salario_diario;
+delimiter //
+create function salario_diario (id_empleado int)
+returns decimal(12,2) deterministic
+begin
+	return (select (c.sueldo_mensual / c.dias_trabajo) from empleado e inner join cargo c on e.id_cargo = c.id where e.id = id_empleado);
+end
+// delimiter ;
+
+select salario_diario(1);
+
+-- 7 promedio de venta de una presentacion
+drop function if exists promedio_presentacion;
+delimiter //
+create function promedio_presentacion (id_presentacion int)
+returns decimal(12,2) deterministic
+begin
+	return (select avg(cantidad) from venta_producto where id_presentacion_producto = id_presentacion group by id_presentacion);
+end
+// delimiter ;
+
+select promedio_presentacion(2);
+
+-- 8 total de ingresos por ventas en un rango de fechas.
+drop function if exists ventas_fechas;
+delimiter //
+create function ventas_fechas (fecha1 date , fecha2 date)
+returns decimal(12,2) deterministic
+begin
+	return (select sum(precio_total) from venta where fecha_venta between fecha1 and fecha2);
+end
+// delimiter ;
+
+select ventas_fechas('2024-11-11','2024-11-23');
+
+
+
+
+
+
+
+
+select * from empleado;
+select * from cargo;
+select * from venta_producto;
+select * from venta;
 -- 17. Calcular los gastos de un mes
 
 drop function if exists ingresos_mensuales;
@@ -117,5 +187,3 @@ begin
 end
 // delimiter ;
 select total_ventas_cliente(1,11) as numero_ventas;
-
-	
