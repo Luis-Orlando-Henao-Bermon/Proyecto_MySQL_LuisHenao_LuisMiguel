@@ -305,7 +305,7 @@ end
 select calcular_salario_empleado(24,1) as sueldo_mes;
 
 
--- 20. Calcular el total de ventas hechas por cliente en un mes 
+-- 20. Calcular el total de ventas hechas a un cliente en un mes 
 
 drop function if exists total_ventas_cliente;
 delimiter //

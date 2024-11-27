@@ -78,15 +78,14 @@ end
 //delimiter ;
 
 call hacer_venta (current_date(),4,2);
-select * from venta;
 
 -- 6 asignar productos a una venta
 drop procedure if exists asignar_productos_venta;
 delimiter //
 create procedure asignar_productos_venta (
-	in id_venta int,
+	in id_ventaF int,
     in id_presentacion_productoF int,
-    in cantidad int,
+    in cantidadF int,
     out mensaje varchar(70)
 )
 begin 
@@ -95,23 +94,165 @@ begin
     declare id_producto int;
     set id_producto = (select id_producto from presentacion_producto where id = id_presentacion_productoF);
     set cantidad_kg_disponibles = (select cantidad_kg from producto where id = id_producto);
-    set cantidad_kg_vender = (select cantidad_kg from presentacion_producto where id = id_presentacion_productoF) * cantidad;
+    set cantidad_kg_vender = (select cantidad_kg from presentacion_producto where id = id_presentacion_productoF) * cantidadF;
     
 	if (cantidad_kg_vender < cantidad_kg_disponibles) then
-		insert into venta_producto(id_venta,id_presentacion_producto,cantidad) values (id_venta,id_presentacion_producto,cantidad);
+		insert into venta_producto(id_venta,id_presentacion_producto,cantidad) values (id_ventaF,id_presentacion_productoF,cantidadF);
         update producto set cantidad_kg = cantidad_kg_disponibles - cantidad_kg_vender where id = id_producto;
         select 'el producto fue agregado' into mensaje;
-	else select 'la cantida de producto que deseas agregar supera la cantidad en stok' into mensaje;
+	else 
+		select 'la cantida de producto que deseas agregar supera la cantidad en stok' into mensaje;
     end if;
-end
+end  -- pendiente
 //delimiter ;
-
-
 
 call asignar_productos_venta(51,2,1,@mensaje);
 select @mensaje;
 
+-- 7. Insertar un cultivo 
 
+drop procedure if exists insertar_cultivo;
+delimiter //
+create procedure insertar_cultivo (id_productoF int,id_terrenoF int,hectareas_usadasF int)
+begin
+	insert into cultivo(id_producto,id_terreno,hectareas_usadas)  -- Falta hacer trigger
+    values (id_productoF,id_terrenoF,hectareas_usadasF);
+end
+// delimiter ;
+
+call insertar_cultivo(1,1,3);
+-- 8. Registrar un nuevo cliente
+
+drop procedure if exists registrar_cliente;
+delimiter //
+create procedure registrar_cliente (nombre1F varchar(50),nombre2F varchar(50),apellido1F varchar(50),apellido2F varchar(50),cedulaF bigint)
+begin
+	insert into cliente(nombre1,nombre2,apellido1,apellido2,cedula) 
+    values (nombre1F,nombre2F,apellido1F,apellido2F,cedulaF);
+end
+// delimiter ;
+
+call registrar_cliente('Luis','Orlando','Henao','Bermon',1096852353);
+
+-- 9. Insertar un login para los clientes
+
+drop procedure if exists crear_login_cliente;
+delimiter //
+create procedure crear_login_cliente (usuarioF varchar(50),contraseñaF varchar(50),id_cliente int)
+begin
+	declare num_id int;
+    
+    set num_id =(select count(*) from login)+1;
+
+	insert into login (usuario,contraseña,rol)
+    values (usuarioF,contraseñaF,'cliente');
+    
+     -- update cliente set id_login=num_id where id=id_cliente; -- Falta hacer trigger
+end
+// delimiter ;
+call crear_login_cliente('luchin124','paswordjsjsjs',51);
+
+-- 10. Insertar un nuevo empleado
+
+drop procedure if exists registrar_empleado;
+
+delimiter //
+create procedure registrar_empleado (nombre1F varchar(50),nombre2F varchar(50),apellido1F varchar(50),apellido2F varchar(50),cedulaF bigint,id_cargoF int)
+begin
+	insert into empleado(nombre1,nombre2,apellido1,apellido2,cedula,id_cargo) 
+    values (nombre1F,nombre2F,apellido1F,apellido2F,cedulaF,id_cargoF);
+end
+// delimiter ;
+
+call registrar_empleado('Luis','Miguel','Caicedo','Bermon','1253362420',3);
+
+-- 11. Insertar un login para los empleado
+
+drop procedure if exists crear_login_empleado;
+delimiter //
+create procedure crear_login_empleado (usuarioF varchar(50),contraseñaF varchar(50),id_empleado int)
+begin
+	declare num_id int;
+    
+    set num_id =(select count(*) from login)+1;
+
+	insert into login (usuario,contraseña,rol)
+    values (usuarioF,contraseñaF,'empleado');
+    
+       -- update empleado set id_login=num_id where id=id_empleado; -- Falta hacer trigger
+end
+// delimiter ;
+call crear_login_empleado('luisito9292','contra1014',51);
+
+-- 12. Insertar un nuevo proveedor
+
+drop procedure if exists registrar_proveedor;
+
+delimiter //
+create procedure registrar_proveedor (nombre1F varchar(50),nombre2F varchar(50),apellido1F varchar(50),apellido2F varchar(50),cedulaF bigint,direccionF varchar(100))
+begin
+	insert into proveedor(nombre1,nombre2,apellido1,apellido2,cedula,direccion) 
+    values (nombre1F,nombre2F,apellido1F,apellido2F,cedulaF,direccionF);
+end
+// delimiter ;
+
+call registrar_proveedor('Laura','Patricia','Salamanca','Zuleta','10225365845','Calle 23 #2-12 barrio u');
+
+-- 13. Insertar un login para los proveedor
+
+drop procedure if exists crear_login_proveedor;
+delimiter //
+create procedure crear_login_proveedor (usuarioF varchar(50),contraseñaF varchar(50),id_proveedor int)
+begin
+	declare num_id int;
+    
+    set num_id =(select count(*) from login)+1;
+
+	insert into login (usuario,contraseña,rol)
+    values (usuarioF,contraseñaF,'proveedor');
+    
+       -- update proveedor set id_login=num_id where id=id_empleado; -- Falta hacer trigger
+end
+// delimiter ;
+call crear_login_proveedor('lauza9292','love3489',21);
+
+-- 14. Actualizar un login 
+
+drop procedure if exists actualizar_login;
+delimiter //
+create procedure actualizar_login (usuarioF varchar(50),contraseñaF varchar(50),id_login int)
+begin
+
+	update login set usuario=usuarioF, contraseña=contraseñaF where id=id_login;
+end
+// delimiter ;
+
+call actualizar_login('user1','pasword1',1);
+
+-- 15.  Actualizar el estado de una herramienta/maquinaria
+
+drop procedure if exists actualizar_herramienta;
+delimiter //
+create procedure actualizar_herramienta (id_nuevo_estado int,id_herramienta int)
+begin
+
+	update maquinaria_herramienta set id_estado=id_nuevo_estado where id=id_herramienta;
+end
+// delimiter ;
+call actualizar_herramienta(3,1);
+
+-- 16. Insertar una nueva herramienta/maquina
+
+drop procedure if exists insertar_herramienta;
+delimiter //
+create procedure insertar_herramienta (nombreF varchar(50),id_tipoF int,id_estadoF int, id_bodegaF int)
+begin
+	
+    insert into maquinaria_herramienta(nombre,id_tipo,id_estado,id_bodega) values (nombreF,id_tipoF,id_estadoF,id_bodegaF);
+    
+end
+// delimiter ;
+call insertar_herramienta('Machete',2,3,4);
 
 -- 17. Insertar una cosecha
 
@@ -126,10 +267,10 @@ begin
     set id_product =(select distinct cu.id_producto from cultivo cu inner join cosecha c on cu.id=c.id_cultivo where cu.id=id_cultivoF);
     set total=cantidad_cosechada_kgF-cantidad_perdida_kgF;
     
-	insert into cosecha(fecha_inicio,fecha_fin,id_cultivo,cantidad_total_kg,cantidad_cosechada_kg,cantidad_perdida)
+	insert into cosecha(fecha_inicio,fecha_fin,id_cultivo,cantidad_total_kg,cantidad_cosechada_kg,cantidad_perdida) -- Falta hacer triguer
     values (fecha_inicioF,fecha_finF,id_cultivoF,total,cantidad_cosechada_kgF,cantidad_perdida_kgF);
     
-    update producto set cantidad_kg=cantidad_kg+total where id=id_product;
+     -- update producto set cantidad_kg=cantidad_kg+total where id=id_product;
 end
 // delimiter ;
 call insertar_cosecha('2024-11-22','2024-11-27',1,5000,500);

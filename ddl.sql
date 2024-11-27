@@ -96,14 +96,14 @@ create table venta_producto (
     foreign key (id_presentacion_producto) references presentacion_producto(id)
 );
 
-create table preveedor (
+create table proveedor (
 	id int primary key auto_increment,
 	nombre1 varchar (50) not null,
     nombre2 varchar (50),
     apellido1 varchar (50) not null,
     apellido2 varchar (50),
     cedula bigint not null,
-    direccion varchar(30) not null,
+    direccion varchar(100) not null,
     id_login int,
     foreign key (id_login) references login(id)
 );
@@ -114,7 +114,7 @@ create table compra (
     fecha_compra date not null,
     precio_total bigint,
     id_metodo_pago int not null,
-    foreign key (id_proveedor) references preveedor(id),
+    foreign key (id_proveedor) references proveedor(id),
     foreign key (id_metodo_pago) references metodo_pago(id)
 );
 
@@ -155,7 +155,7 @@ create table cosecha (
     foreign key (id_cultivo) references cultivo(id)
 );
 
-create table cultivo_empleado (
+create table cosecha_empleado (
     id_cosecha int not null,
     id_empleado int not null,
     foreign key (id_cosecha) references cosecha(id),

@@ -693,7 +693,7 @@ INSERT INTO insumos (nombre, id_tipo_insumo, cantidad, id_bodega) VALUES
 
 
 -- Inserts para la tabla proveedor
-INSERT INTO preveedor (nombre1, nombre2, apellido1, apellido2, cedula, direccion, id_login) VALUES
+INSERT INTO proveedor (nombre1, nombre2, apellido1, apellido2, cedula, direccion, id_login) VALUES
 ('Juan', NULL, 'Perez', 'Gomez', 1012345678, 'Calle 1', 1),
 ('Maria', 'Jose', 'Gomez', NULL, 1023456789, 'Calle 2', 2),
 ('Pedro', NULL, 'Lopez', 'Rodriguez', 1034567890, 'Calle 3', 3),
@@ -763,7 +763,7 @@ INSERT INTO compra_producto (id_compra, precio_unitario, cantidad, producto, tip
 (10, 15000, 4, 'Insecticida F', 'Insumo');
 
 -- Insertar cultivo_empleado
-INSERT INTO cultivo_empleado (id_cosecha, id_empleado) VALUES
+INSERT INTO cosecha_empleado (id_cosecha, id_empleado) VALUES
 (1, 3),
 (1, 5),
 (1, 12),
