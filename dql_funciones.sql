@@ -136,24 +136,159 @@ select * from empleado;
 select * from cargo;
 select * from venta_producto;
 select * from venta;
--- 17. Calcular los gastos de un mes
 
-drop function if exists ingresos_mensuales;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- 16. calcular el porcentaje de ganancia de un mes. la ganacia se calcula restandole los gastos a los ingresos 
+
+drop function if exists porcentaje_ganancia;
 delimiter //
-create function ingresos_mensuales (inicio_mes date, fin_mes date)
-returns int deterministic
+create function porcentaje_ganancia (ingresosF int, ganancia_finalF int)
+returns varchar(100) deterministic
 begin
-	declare ingresos int;
+	declare porcentaje_ganancia bigint;
+    declare porcentaje varchar(100);
     
-    set ingresos = (select sum(precio_total) from compra where fecha_compra between inicio_mes and fin_mes);
-    return salario;
+    set porcentaje_ganancia= (ganancia_finalF/ingresosF)*100;
+	set porcentaje= concat_ws('',porcentaje_ganancia,'%');
+    return porcentaje;
 end
 // delimiter ;
-select 
 
--- 18. Calcular la ganancia neta mensual
+select id,porcentaje_ganancia(ganancia_final, gastos) as porcentaje_ganancia from ingresos_gastos_mensuales;
+-- 17. Calcular la cantidad total de cosecha de un producto
 
--- 19. Calcular el salario total pagado a empleados en un mes
+drop function if exists total_cosecha_producto;
+delimiter //
+create function total_cosecha_producto (id_producto int)
+returns int deterministic
+begin
+	declare total_cosecha int;
+    
+    set total_cosecha=(select sum(cs.cantidad_total_kg) from cultivo c inner join producto p on c.id_producto=p.id 
+    inner join cosecha cs on c.id=cs.id_cultivo 
+    where p.id=id_producto);
+    return total_cosecha;
+end
+// delimiter ;
+
+select total_cosecha_producto(3) as total_cosecha;
+
+insert into ingresos_gastos_mensuales(inicio_mes,fin_mes,ingresos,gastos,ganancia_final) 
+values ('2024-10-01','2024-10-31',ventas_fechas('2024-10-01','2024-10-31'),gastos_mensuales('2024-10-01','2024-10-31'),0);
+
+-- 18. Calcular los gastos mensuales
+-- previamente debes ejecutar los procedimientos #3 y #4 asignar_pago_final() y asignar_salarios()
+drop function if exists gastos_mensuales;
+delimiter //
+create function gastos_mensuales (inicio_mes date, fin_mes date)
+returns int deterministic
+begin
+	declare gastos_compras int;
+    declare gastos_salarios int default 0;
+    declare gastos_mensuales int default 0;
+    
+    set gastos_compras = (select sum(precio_total) from compra where fecha_compra between inicio_mes and fin_mes);
+    set gastos_salarios = (select sum(pago_final) from salarios where inicio_mes_pagado between inicio_mes and fin_mes or fin_mes_pagado between inicio_mes and fin_mes);
+    set gastos_mensuales= gastos_compras+gastos_salarios;
+    
+    return gastos_mensuales;
+end
+// delimiter ;
+select gastos_mensuales('2024-10-01','2024-10-31') as gastos_mensuales;
+
+-- 19. Calcular el salario total pagado a un empleado en un mes
 
 drop function if exists calcular_salario_empleado;
 delimiter //
