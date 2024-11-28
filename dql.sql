@@ -72,7 +72,7 @@ select c.* , nombre_completo(p.id,'proveedor') as nombre_completo from compra c 
 -- 23 cantidad de empleados por cosecha
 select c.* , count(*) from cosecha c inner join cosecha_empleado ce on c.id = ce.id_cosecha group by 1; 
 
-select * from cultivo_empleado;
+select * from cosecha_empleado;
 
 -- 24 compra mas costosa
 select * from compra order by precio_total desc limit 1;
