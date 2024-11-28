@@ -574,3 +574,6 @@ grant select on finca_agricola_ll.cargo to 'empleado'@'localhost';
 grant select on finca_agricola_ll.cosecha_empleado to 'empleado'@'localhost';
 grant select on finca_agricola_ll.empleado to 'empleado'@'localhost';
 ```
+
+## Desarrollado por 
+[Luis Orlando Henao](https://github.com/Luis-Orlando-Henao-Bermon) , [Luis Miguel Caicedo](https://github.com/Luis-Miguel-Caicedo-Bermon)
