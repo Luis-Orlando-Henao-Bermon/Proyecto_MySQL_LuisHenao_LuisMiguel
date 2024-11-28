@@ -83,30 +83,31 @@ call hacer_venta (current_date(),4,2);
 drop procedure if exists asignar_productos_venta;
 delimiter //
 create procedure asignar_productos_venta (
-	in id_ventaF int,
-    in id_presentacion_productoF int,
-    in cantidadF int,
+	 id_ventaF int,
+     id_presentacion_productoF int,
+     cantidadF int,
     out mensaje varchar(70)
 )
 begin 
 	declare cantidad_kg_vender int;
 	declare cantidad_kg_disponibles int;
-    declare id_producto int;
-    set id_producto = (select id_producto from presentacion_producto where id = id_presentacion_productoF);
-    set cantidad_kg_disponibles = (select cantidad_kg from producto where id = id_producto);
+    declare id_producto_f int;
+    set id_producto_f = (select id_producto from presentacion_producto where id = id_presentacion_productoF);
+    set cantidad_kg_disponibles = (select cantidad_kg from producto where id = id_producto_f);
     set cantidad_kg_vender = (select cantidad_kg from presentacion_producto where id = id_presentacion_productoF) * cantidadF;
     
 	if (cantidad_kg_vender < cantidad_kg_disponibles) then
 		insert into venta_producto(id_venta,id_presentacion_producto,cantidad) values (id_ventaF,id_presentacion_productoF,cantidadF);
-        update producto set cantidad_kg = cantidad_kg_disponibles - cantidad_kg_vender where id = id_producto;
+        update producto set cantidad_kg = cantidad_kg_disponibles - cantidad_kg_vender where id = id_producto_f;
         select 'el producto fue agregado' into mensaje;
 	else 
 		select 'la cantida de producto que deseas agregar supera la cantidad en stok' into mensaje;
     end if;
-end  -- pendiente
+end
 //delimiter ;
 
-call asignar_productos_venta(51,2,1,@mensaje);
+
+call asignar_productos_venta(51,2,5,@mensaje);
 select @mensaje;
 
 -- 7. Insertar un cultivo 
@@ -115,12 +116,12 @@ drop procedure if exists insertar_cultivo;
 delimiter //
 create procedure insertar_cultivo (id_productoF int,id_terrenoF int,hectareas_usadasF int)
 begin
-	insert into cultivo(id_producto,id_terreno,hectareas_usadas)  -- Falta hacer trigger
+	insert into cultivo(id_producto,id_terreno,hectareas_usadas) 
     values (id_productoF,id_terrenoF,hectareas_usadasF);
 end
 // delimiter ;
 
-call insertar_cultivo(1,1,3);
+call insertar_cultivo(3,7,3);
 -- 8. Registrar un nuevo cliente
 
 drop procedure if exists registrar_cliente;
@@ -144,13 +145,13 @@ begin
     
     set num_id =(select count(*) from login)+1;
 
+	set @var_cliente = id_cliente;
 	insert into login (usuario,contraseña,rol)
     values (usuarioF,contraseñaF,'cliente');
     
-     -- update cliente set id_login=num_id where id=id_cliente; -- Falta hacer trigger
 end
 // delimiter ;
-call crear_login_cliente('luchin124','paswordjsjsjs',51);
+call crear_login_cliente('pipipi','pipipi',50);
 
 -- 10. Insertar un nuevo empleado
 
@@ -175,7 +176,7 @@ begin
 	declare num_id int;
     
     set num_id =(select count(*) from login)+1;
-
+	set @var_empleado = id_empleado;
 	insert into login (usuario,contraseña,rol)
     values (usuarioF,contraseñaF,'empleado');
     
@@ -207,14 +208,14 @@ begin
 	declare num_id int;
     
     set num_id =(select count(*) from login)+1;
-
+	set @var_proveedor = id_proveedor;
 	insert into login (usuario,contraseña,rol)
     values (usuarioF,contraseñaF,'proveedor');
     
        -- update proveedor set id_login=num_id where id=id_empleado; -- Falta hacer trigger
 end
 // delimiter ;
-call crear_login_proveedor('lauza9292','love3489',21);
+call crear_login_proveedor('maria','jose',2);
 
 -- 14. Actualizar un login 
 
@@ -265,7 +266,7 @@ begin
     declare total int;
     
     set id_product =(select distinct cu.id_producto from cultivo cu inner join cosecha c on cu.id=c.id_cultivo where cu.id=id_cultivoF);
-    set total=cantidad_cosechada_kgF-cantidad_perdida_kgF;
+    set total=cantidad_cosechada_kgF+cantidad_perdida_kgF;
     
 	insert into cosecha(fecha_inicio,fecha_fin,id_cultivo,cantidad_total_kg,cantidad_cosechada_kg,cantidad_perdida) -- Falta hacer triguer
     values (fecha_inicioF,fecha_finF,id_cultivoF,total,cantidad_cosechada_kgF,cantidad_perdida_kgF);
@@ -274,6 +275,7 @@ begin
 end
 // delimiter ;
 call insertar_cosecha('2024-11-22','2024-11-27',1,5000,500);
+call insertar_cosecha('2024-12-22','2024-12-30',1,5000,500);
 -- 18. Insertar salarios a un cliente
 
 drop procedure if exists insertar_salario;
@@ -300,15 +302,25 @@ end
 // delimiter ;
 call insertar_compra(1,current_date(),2);
 
--- 20. Añadir producto a una venta
+-- 20. Añadir producto a una compra
 drop procedure if exists insertar_producto_compra;
 delimiter //
 create procedure insertar_producto_compra (id_compraF int, precio_unitarioF int, cantidadF int,productoF varchar(50),tipoF varchar(30))
 begin
 	insert into compra_producto(id_compra, precio_unitario, cantidad,producto,tipo ) values(id_compraF, precio_unitarioF, cantidadF,productoF,tipoF);
     
-    update compra set precio_total =precio_total(id_compraF) where id=id_compraF;
 end
 // delimiter ;
 
-call insertar_producto_compra(11,50000,2,'Pala','Herramienta');
+call insertar_producto_compra(11,50000,10,'Machete','Herramienta');
+
+
+-- prueba de trigger #7 'asignar_login_proveedor'
+call crear_login_proveedor('lau','salam',21);
+
+-- prueba de trigger #8 'evitar_compras_negativas'
+call insertar_producto_compra(11,-34,2,'Machete','Herramienta');
+
+
+-- prueba de trigger #9 'evitar_ventas_negativas'
+call asignar_productos_venta(51,2,-3,@mensaje);
