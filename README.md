@@ -4,6 +4,8 @@ La finca L&L solicito una base de datos para el manejo de su finca, para la entr
 ## Documentacion 
 [Notion](https://spangle-apple-c4a.notion.site/Finca-agricola-L-L-1496a54c497a80adae0dc6231e0c2393)
 
+[Video Explicacion](https://youtu.be/1qcDM8oOFIQ)
+
 ## Requisitos del sistema
 Para poder ejecutar este proyecto necesitas tener instalado la aplicacion de escritorio workbech 8.0, git bash
 
