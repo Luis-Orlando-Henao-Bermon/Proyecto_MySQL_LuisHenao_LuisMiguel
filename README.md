@@ -253,6 +253,7 @@ create table ingresos_gastos_mensuales (
     ganancia_final bigint not null
 );
 ```
+
 ## Ejemplos de funciones
 ```sql
 -- Funcion para saber el precio_total de una venta
@@ -356,4 +357,220 @@ end
 
 call asignar_productos_venta(51,2,5,@mensaje);
 select @mensaje;
+
+
+-- Asignar el pago final al salario de un empleado
+-- previamente debes instalar la funcion numero #19 calcular_salario_empleado()
+drop procedure if exists asignar_pago_final;
+delimiter //
+create procedure asignar_pago_final(id_salarioF int)
+begin
+	declare cargo int;
+    declare id_empleado int;
+    declare dias_trabajadosF int;
+    
+    set id_empleado=(select e.id from empleado e inner join salarios s on e.id=s.id_empleado where s.id=id_salarioF);
+    set cargo= (select id_cargo from empleado where id= id_empleado);
+    set dias_trabajadosF= (select dias_trabajados from salarios where id=id_salarioF);
+    
+	update salarios set pago_final = calcular_salario_empleado(dias_trabajadosF,cargo) where id = id_salarioF;
+end
+// delimiter ;
+call asignar_pago_final(1);
+
+-- Insertar un cultivo 
+
+drop procedure if exists insertar_cultivo;
+delimiter //
+create procedure insertar_cultivo (id_productoF int,id_terrenoF int,hectareas_usadasF int)
+begin
+	insert into cultivo(id_producto,id_terreno,hectareas_usadas) 
+    values (id_productoF,id_terrenoF,hectareas_usadasF);
+end
+// delimiter ;
+
+call insertar_cultivo(3,7,3);
+-- Registrar un nuevo cliente
+
+drop procedure if exists registrar_cliente;
+delimiter //
+create procedure registrar_cliente (nombre1F varchar(50),nombre2F varchar(50),apellido1F varchar(50),apellido2F varchar(50),cedulaF bigint)
+begin
+	insert into cliente(nombre1,nombre2,apellido1,apellido2,cedula) 
+    values (nombre1F,nombre2F,apellido1F,apellido2F,cedulaF);
+end
+// delimiter ;
+
+call registrar_cliente('Luis','Orlando','Henao','Bermon',1096852353);
+
+```
+
+## Ejemplos de triggers
+
+```sql
+-- aumentar cantidad de stock de un producto cuando se inserte una nueva cosecha
+drop trigger if exists aumentar_cantidad_producto;
+delimiter //
+create trigger aumentar_cantidad_producto
+after insert on cosecha
+for each row
+begin
+	declare id_producto_i int;
+    set id_producto_i = (select cul.id_producto from cosecha c inner join cultivo cul on c.id_cultivo = cul.id where c.id = new.id);
+	update producto set cantidad_kg = cantidad_kg + new.cantidad_cosechada_kg where id = id_producto_i;
+end  
+// delimiter ;
+
+
+-- actualizar precio total de una compra
+-- cada que se agregue un producto
+drop trigger if exists actualizar_precio_total_compra;
+delimiter //
+create trigger actualizar_precio_total_compra
+after insert on compra_producto
+for each row
+begin
+	update compra set precio_total =precio_total(new.id_compra) where id=new.id_compra;
+end  
+// delimiter ;
+
+
+-- actualizar la cantidad de hectareas libre de los terrenos 
+-- cuando se ingrese un nuevo cultivo
+drop trigger if exists actualizar_hectareas_libres;
+delimiter //
+create trigger actualizar_hectareas_libres
+after insert on cultivo
+for each row
+begin
+	update terreno set hectareas_libres = hectareas_libres - new.hectareas_usadas where id = new.id_terreno;
+end  
+// delimiter ;
+
+-- Evitar que se inserten compras con precios negativos en la tabla compra_producto.
+drop trigger if exists evitar_compras_negativas;
+delimiter //
+create trigger evitar_compras_negativas
+before insert on compra_producto
+for each row
+begin
+	if (new.precio_unitario <= 0)then
+		signal sqlstate '45000' set message_text = 'no se pueden usar valores negativos en el precio de un producto';
+    end if;
+end  
+// delimiter ;
+
+```
+## Ejemplos de eventos
+
+```sql
+-- Evento para registro de ingresos y gastos en un mes cada mes
+
+drop event if exists event_ingresos_gastos_mensuales;
+
+create event event_ingresos_gastos_mensuales
+on schedule every 1 month
+do insert into ingresos_gastos_mensuales(inicio_mes,fin_mes,ingresos,gastos,ganancia_final) 
+values (DATE_FORMAT(CURDATE(), '%Y-%m-01'),
+LAST_DAY(CURDATE()),
+ventas_fechas(DATE_FORMAT(CURDATE(), '%Y-%m-01'),LAST_DAY(CURDATE())),
+gastos_mensuales(DATE_FORMAT(CURDATE(), '%Y-%m-01'),LAST_DAY(CURDATE())),
+(ventas_fechas(DATE_FORMAT(CURDATE(), '%Y-%m-01'),LAST_DAY(CURDATE()))+gastos_mensuales(DATE_FORMAT(CURDATE(), '%Y-%m-01'),LAST_DAY(CURDATE()))));
+
+
+-- Evento para ingresar  los precios totales a la tabla venta todos los dias
+
+drop event if exists ingresar_precios_total_venta;
+
+create event ingresar_precios_total_venta
+on schedule every 1 day
+do call bucle_precio_total_venta();
+show events;
+
+
+-- Evnto para asignar los pagos finales de la tabla salarios todos los dias
+
+drop event if exists asignar_precio_salarios;
+
+create event asignar_precio_salarios
+on schedule every 1 day
+do call asignar_salarios();
+show events;drop event if exists asignar_precio_salarios;
+```
+
+## Ejemplos de consultas
+
+```sql
+-- ver verduras y su cantidad en stock
+select p.nombre , p.cantidad_kg from producto p inner join tipo_producto t on p.id_tipo = t.id where t.nombre = 'Verdura';
+
+-- ver cuantas hectareas de terreno hay en total
+select sum(tamaño) from terreno;
+
+-- ver cantidad de hectareas libres
+select sum(hectareas_libres) as total_hectareas_libres from terreno;
+
+-- ver cantidad de hectareas acupadas
+select sum(tamaño - hectareas_libres) as total_hectareas_libres from terreno;
+
+-- ver ventas junto con los productos vendidos
+select v.* , p.nombre , pp.presentacion , vp.cantidad from venta v 
+inner join venta_producto vp on v.id = vp.id_venta 
+inner join presentacion_producto pp on vp.id_presentacion_producto = pp.id 
+inner join producto p on pp.id_producto = p.id order by v.id;
+
+-- ver el empleado que ha tenido un mayor salario
+select s.id , nombre_completo(e.id,'empleado') , s.pago_final from salarios s inner join empleado e on s.id_empleado = e.id order by s.pago_final desc limit 1;
+
+-- ver compras junto con los productos 
+select * from compra c inner join compra_producto cp on c.id = cp.id_compra;
+
+-- ver compra y su metodo de pago
+select c.* , m.metodo from compra c inner join metodo_pago m on c.id_metodo_pago = m.id;
+
+-- 21 ver insumos y su tipo
+select i.* , t.nombre as tipo_insumo from insumos i inner join tipo_insumo t on i.id_tipo_insumo = t.id;
+
+-- 22 venta con el nombre de el proveedor
+select c.* , nombre_completo(p.id,'proveedor') as nombre_completo from compra c inner join proveedor p on c.id_proveedor = p.id; 
+
+-- 23 cantidad de empleados por cosecha
+select c.* , count(*) from cosecha c inner join cosecha_empleado ce on c.id = ce.id_cosecha group by 1; 
+```
+## Usuarios
+
+```sql
+create user 'Admin'@'localhost'
+identified with mysql_native_password by 'password_admin';
+
+grant all privileges on *.* to 'Admin'@'localhost';
+
+create user 'dueño_finca'@'localhost'
+identified with mysql_native_password by 'password_dueño';
+
+grant all privileges on finca_agricola_ll.* to 'dueño_finca'@'localhost';
+
+create user 'cliente'@'localhost'
+identified with mysql_native_password by 'password_cliente';
+
+grant select on finca_agricola_ll.producto to 'cliente'@'localhost';
+grant select on finca_agricola_ll.presentacion_producto to 'cliente'@'localhost';
+grant select on finca_agricola_ll.tipo_producto to 'cliente'@'localhost';
+grant select on finca_agricola_ll.cliente to 'cliente'@'localhost';
+
+create user 'proveedor'@'localhost'
+identified with mysql_native_password by 'password_proveedor';
+
+grant select on finca_agricola_ll.compra to 'proveedor'@'localhost';
+grant select on finca_agricola_ll.compra_producto to 'proveedor'@'localhost';
+grant select on finca_agricola_ll.metodo_pago to 'proveedor'@'localhost';
+grant select on finca_agricola_ll.proveedor to 'proveedor'@'localhost';
+
+create user 'empleado'@'localhost'
+identified with mysql_native_password by 'password_empleado';
+
+grant select on finca_agricola_ll.salarios to 'empleado'@'localhost';
+grant select on finca_agricola_ll.cargo to 'empleado'@'localhost';
+grant select on finca_agricola_ll.cosecha_empleado to 'empleado'@'localhost';
+grant select on finca_agricola_ll.empleado to 'empleado'@'localhost';
 ```
