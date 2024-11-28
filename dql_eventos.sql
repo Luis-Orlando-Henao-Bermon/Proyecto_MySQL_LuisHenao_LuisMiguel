@@ -1,4 +1,5 @@
-SET GLOBAL event_sheduler = ON;
+-- en caso de que tu computador no pueda ejecutar las funciones descomenta la siguiente linea
+-- SET GLOBAL event_sheduler = ON;
 
 use finca_agricola_LL;
 
