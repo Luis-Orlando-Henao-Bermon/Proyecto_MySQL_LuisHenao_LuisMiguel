@@ -267,25 +267,18 @@ end
 
 delete from presentacion_producto where id = 2;
 
--- 20 calcular hectareas libres despues de actualizar el tamaño de un terreno
-drop procedure if exists ahl;
-delimiter //
-create procedure ahl(id_terreno int , tamaño int)
-begin
-	create event ahl
-    on schedule at current_timestamp + interval 10  second
-	do update terreno set hectareas_libres = tamaño - terreno_usado(id_terreno) where id = id_terreno;
-end
-// delimiter ;
 
-drop trigger if exists actualizar_hectareas_libres;
+
+-- 20 eliminar compras realizadas relacionadas con un proveedor eliminado
+drop trigger if exists borrar_compras;
 delimiter //
-create trigger actualizar_hectareas_libres
-after update on terreno
+create trigger borrar_compras
+before delete on proveedor
 for each row
 begin
-	call ahl(new.id,new.tamaño);
+	delete from compra_producto where id_compra = (select id from compra where id_proveedor = old.id);
+    delete from compra where id_proveedor = old.id;
 end  
 // delimiter ;
 
-update terreno set tamaño = 25 where id = 1;
+delete from proveedor where id = 3;
