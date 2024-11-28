@@ -180,7 +180,6 @@ begin
 	insert into login (usuario,contraseña,rol)
     values (usuarioF,contraseñaF,'empleado');
     
-       -- update empleado set id_login=num_id where id=id_empleado; -- Falta hacer trigger
 end
 // delimiter ;
 call crear_login_empleado('luisito9292','contra1014',51);
@@ -212,7 +211,6 @@ begin
 	insert into login (usuario,contraseña,rol)
     values (usuarioF,contraseñaF,'proveedor');
     
-       -- update proveedor set id_login=num_id where id=id_empleado; -- Falta hacer trigger
 end
 // delimiter ;
 call crear_login_proveedor('maria','jose',2);
@@ -324,3 +322,6 @@ call insertar_producto_compra(11,-34,2,'Machete','Herramienta');
 
 -- prueba de trigger #9 'evitar_ventas_negativas'
 call asignar_productos_venta(51,2,-3,@mensaje);
+
+-- prueba de trigger #10 'evitar_registro_cultivo_erroneo'
+call insertar_cultivo(20,7,2);
