@@ -113,9 +113,31 @@ select * from ingresos_gastos_mensuales;
 -- 35 listar insumos en la bodega con el id 1
 select b.nombre as bodega , i.* from bodega b inner join insumos i on b.id = i.id_bodega where b.id = 1;
 
+-- 36. mostrar los clientes con los productos y cantidades que han comprado
 
+select nombre_completo(c.id,'cliente'),p.nombre,sum(vp.cantidad) from cliente c inner join venta v on c.id=v.id_cliente 
+inner join venta_producto vp on v.id=vp.id_venta
+inner join presentacion_producto pp on vp.id_presentacion_producto=pp.id
+inner join producto p on pp.id_producto=p.id group by 1,2 order by 1;
 
+-- 37. listar los ingresos por metodo de pago 
 
+select mp.metodo, sum(v.precio_total) as ingresos from metodo_pago mp inner join venta v on mp.id=v.id_metodo_pago group by 1;
+
+-- 38. Listar las herramientas/maquinas que esten dañadas 
+
+select * from maquinaria_herramienta where id_estado=3;
+
+-- 39. Listar el producto que a generado la mayor cantidad de ingresos 
+
+select p.nombre,sum(v.precio_total) ingresos_generados from  venta v inner join venta_producto vp on v.id=vp.id_venta
+inner join presentacion_producto pp on vp.id_presentacion_producto=pp.id
+inner join producto p on pp.id_producto=p.id group by 1 order by 2 desc limit 1;
+
+-- 40. mostrar los proveedores junto con los productos que se le han comprado
+
+select distinct nombre_completo(p.id,'proveedor'),cp.producto from proveedor p inner join compra c on p.id=c.id_proveedor
+inner join compra_producto cp on c.id=cp.id_compra;
 
 -- 41 listar las herramientas/maquinarias que hay en la bodega con id 5 y el nombre de la bodega
 
@@ -152,7 +174,6 @@ select c.*, l.usuario from cliente c inner join login l on c.id_login=l.id;
 -- 49. listar las ventas con su metodo de pago
 
 select v.* , mp.metodo from venta v inner join metodo_pago mp on v.id_metodo_pago=mp.id;
-
 
 -- 50. listar los cultivos con las corrdenadas de su terreno
 
@@ -201,3 +222,185 @@ inner join presentacion_producto pp on vp.id_presentacion_producto=pp.id
 inner join producto p on pp.id_producto=p.id 
 group by 1,2;
 
+
+-- 61. listar los proveedores a los que no se le han realizado compras
+
+select nombre_completo(p.id,'proveedor') from proveedor p where p.id not in (select id_proveedor from compra);
+
+-- 62. listar las ventas realizadas en la fecha 2024-11-08
+
+select * from venta where fecha_venta='2024-11-08';
+
+-- 63. listar los productos y cantidades vendidos en la siguiente fecha 2024-11-22
+
+select p.nombre,v.fecha_venta,sum(pp.cantidad_kg*vp.cantidad) as cantidad from  venta v inner join venta_producto vp on v.id=vp.id_venta
+inner join presentacion_producto pp on vp.id_presentacion_producto=pp.id
+inner join producto p on pp.id_producto=p.id where v.fecha_venta='2024-11-17' 
+group by 1,2;
+
+--  64. listar cosechas realizadas en el mes de julio sin importar el añoptimize
+
+select * from cosecha where month(fecha_inicio)=7 or month(fecha_fin)=7; 
+
+-- 65. Que cultivos se encuentran en el terreno con id 3
+
+select * from cultivo where id_terreno=3;
+
+-- 66. cantidad total de perdidas de un producto
+
+select p.nombre, sum(c.cantidad_perdida) from producto p inner join cultivo cu on p.id=cu.id_producto
+inner join cosecha c on cu.id=c.id_cultivo group by 1;
+
+-- 67. Listar empleados que no hayan participado en ninguna cosecha
+
+select nombre_completo(e.id,'empleado') from empleado e where e.id not in (select id_empleado from cosecha_empleado);
+
+-- 68. mostar el metodo de pago que ha generado mas ingresos
+
+select mp.metodo, sum(v.precio_total) as ingresos from metodo_pago mp inner join venta v on mp.id=v.id_metodo_pago group by 1 order by 2 desc limit 1;
+
+-- 69. mostar el metodo de pago que ha generado menos ingresos
+
+select mp.metodo, sum(v.precio_total) as ingresos from metodo_pago mp inner join venta v on mp.id=v.id_metodo_pago group by 1 order by 2  limit 1;
+
+-- 70. mostrar el producto con mayor cosecha total
+
+select p.nombre, sum(c.cantidad_total_kg) from producto p inner join cultivo cu on p.id=cu.id_producto
+inner join cosecha c on cu.id=c.id_cultivo group by 1 order by 2 desc limit 1;
+
+-- 71. mostrar el producto con menor cosecha total
+
+select p.nombre, sum(c.cantidad_total_kg) from producto p inner join cultivo cu on p.id=cu.id_producto
+inner join cosecha c on cu.id=c.id_cultivo group by 1 order by 2  limit 1;
+
+-- 72. mostrar el producto con menor cantidad de kilos vendidas
+
+select p.nombre,sum(pp.cantidad_kg*vp.cantidad) as cantidad from  venta v inner join venta_producto vp on v.id=vp.id_venta
+inner join presentacion_producto pp on vp.id_presentacion_producto=pp.id
+inner join producto p on pp.id_producto=p.id group by 1 order by 2 limit 1 ;
+
+-- 73. mostrar el proveedor  que a generado la mayor cantidad de ingresos para el 
+
+select nombre_completo(p.id,'proveedor'), sum(c.precio_total) from proveedor p inner join compra c on p.id=c.id_proveedor group by 1 order by 2 desc limit 1;
+
+-- 74. listar los proveedores que hayan generado para ellos mas de 400000 en ingresos
+
+select nombre_completo(p.id,'proveedor'), sum(c.precio_total) from proveedor p inner join compra c on p.id=c.id_proveedor 
+group by 1 
+having sum(c.precio_total)<400000;
+
+-- 75. mostrar el proveedor  que a generado la menor cantidad de ingresos para el 
+
+select nombre_completo(p.id,'proveedor'), sum(c.precio_total) from proveedor p inner join compra c on p.id=c.id_proveedor group by 1 order by 2  limit 1;
+
+-- 76. listar los productos  con mas de 5 productos en stock
+
+select * from producto where cantidad_kg>5;
+
+-- 77. listar los terrenos con sus cultivos
+
+select t.id,c.id, p.nombre from terreno t inner join cultivo c on t.id=c.id_terreno inner join producto p on p.id= c.id_producto;
+
+-- 78. listar los terrenos con mas de 2 cultivos
+
+select t.id as id_terreno,count(c.id_terreno) as 'cantidad_cultivos' from terreno t inner join cultivo c on t.id=c.id_terreno 
+group by 1 having cantidad_cultivos>2;
+
+-- 79. listar empleados con mas de 1 salario pagado
+
+select nombre_completo(e.id,'empleado') as nombre_empleado,count(s.id_empleado) as 'cantidad_salarios_pagos' from empleado e inner join salarios s on e.id=s.id_empleado 
+group by 1 having cantidad_salarios_pagos>1 ;
+
+-- 80. listar el tipo de maquinaria/herramienta con mayor cantidad de maquinaria/herramienta  en estado dañado
+
+select tmh.nombre,count(mh.id_tipo) as cantidad_dañada from tipo_mh tmh 
+inner join maquinaria_herramienta mh on tmh.id= mh.id_tipo 
+where mh.id_estado=3 group by 1 order by 2 desc limit 1;
+
+-- 81. mostrar la cosecha que a demorado mas tiempo en completarse que los demas
+
+select id, timestampdiff(day,fecha_inicio,fecha_fin) from cosecha order by 2 desc limit 1;
+
+-- 82. mostrar la cosecha que a demorado menos tiempo en completarse que los demas
+
+select id, timestampdiff(day,fecha_inicio,fecha_fin) from cosecha order by 2 limit 1;
+
+-- 83. mostrar las cosechas que se hayan demorado mas de 6 dias en completarse
+
+select id, timestampdiff(day,fecha_inicio,fecha_fin) as 'dias_cosecha' from cosecha having dias_cosecha>6;
+
+-- 84. listar todos los salarios registrados 
+
+select * from salarios;
+
+-- 85. mostrar cuantos insumos hay con el nombre de Abono Orgánico
+
+select sum(cantidad) from insumos where nombre='Abono Orgánico';
+
+-- 86. calcular el total de gastos en salarios de empleados
+
+select sum(pago_final) from salarios;
+
+-- 87. calcular el total de ingresos en ventas
+
+select sum(precio_total) from venta;
+
+-- 88. calcular el total de gastos en compras
+
+select sum(precio_total) from compra;
+
+-- 89. listar los terrenos que hay 
+
+select * from terreno;
+
+-- 90. listar las presentaciones de productos que hayan generado mas de 7 ventas
+
+select pp.id, count(v.id) as 'cantidad_ventas' from presentacion_producto pp 
+inner join venta_producto vp on pp.id=vp.id_presentacion_producto 
+inner join venta v on vp.id_venta= v.id group by 1 having cantidad_ventas>7;
+
+-- 91. ver ventas con mas de 2 productos vendidos
+select v.* ,count(vp.id_presentacion_producto) as 'cantidad_productos' from venta v 
+inner join venta_producto vp on v.id = vp.id_venta 
+inner join presentacion_producto pp on vp.id_presentacion_producto = pp.id 
+inner join producto p on pp.id_producto = p.id group by 1 having cantidad_productos >2 order by v.id;
+
+-- 92. listar los cultivos con mas de 1 cosecha
+
+select cu.id, count(c.id_cultivo) as 'cantidad_cosecha' from cultivo cu inner join cosecha c on cu.id=c.id_cultivo group by 1  having cantidad_cosecha>1;
+
+-- 93. listar los salarios en los cuales el empleado haya faltado mas de 2 dias al trabajo
+
+select s.id,c.dias_trabajo-s.dias_trabajados as 'dias_faltas' from salarios s 
+inner join  empleado e on s.id_empleado=e.id 
+inner join cargo c on e.id_cargo=c.id where c.dias_trabajo-s.dias_trabajados>2;
+
+-- 94. listar los cargos que ganen mas de 1200000
+
+select * from cargo where sueldo_mensual>1200000;
+
+-- 95. listar los roles con la cantidad de usuarios que tiene ese ron
+
+select rol, count(*) as cantidad_usuarios from login group by 1;
+
+-- 96. listar el rol con la mayor cantidad de usuarios
+
+select rol, count(*) as cantidad_usuarios from login group by 1 order by 2 desc limit 1;
+
+-- 97. listar el rol con la menor cantidad de usuarios
+
+select rol, count(*) as cantidad_usuarios from login group by 1 order by 2  limit 1;
+
+ -- 98. listare el ingreso mensual con la mayor cantidad de ganancias
+ 
+ select max(ganancia_final) from ingresos_gastos_mensuales;
+ 
+-- 99. listare el ingreso mensual con la menor cantidad de ganancias
+ 
+ select max(ganancia_final) from ingresos_gastos_mensuales;
+ 
+ -- 100. listar clientes con los metodos de pago que ha realizado
+ 
+ select distinct nombre_completo(c.id,'cliente') as nombre_cliente,mp.metodo  from cliente c 
+ inner join venta v on c.id=v.id_cliente 
+ inner join metodo_pago mp on v.id_metodo_pago=mp.id;
